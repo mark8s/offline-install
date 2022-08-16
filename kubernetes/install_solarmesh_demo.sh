@@ -187,7 +187,6 @@ spec:
                 targetPort: 15443       
 EOF
 
-
 echo "---------- ---------- ---------- ---------- ---------- ----------"
 echo "---------- ---------- ---------- ---------- ---------- ----------"
 echo "---------- ------ Let's install solarmesh ......................."
@@ -294,6 +293,66 @@ kubectl patch svc -n $NS productpage -p '{
         "type": "NodePort"
     }
 }'
+
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mesher-config
+  namespace: service-mesh
+data:
+  application.yml: |
+    config:
+      name: "mesher"
+      version: "v1.0.0"
+      istiod_name: "discovery"
+      in_cluster: true
+      web_hook_url: http://mesh.apps.cloud2go.cn/service-mesh/mesher/traffic/alarm/hook
+      mesh_namespace: service-mesh
+      limit: 20
+      addonComponents:
+        prometheus:
+          enabled: true
+      istio_namespace: "istio-system"
+      prometheus:
+        auth:
+          custom_metrics_url: "http://prometheus.istio-system:9090"
+          url: "http://prometheus.istio-system:9090"
+      mail_client:
+        host: 
+        from_email_address: 
+        port: 
+        ssl: 
+        username: 
+        password: 
+      api:
+        api_namespaces_config:
+          exclude:
+            - "istio-operator"
+            - "kube.*"
+            - "openshift.*"
+            - "prometheus-operator"
+            - "service-mesh"
+            - "ibm.*"
+            - "kial-operator"
+            - "istio-system"
+            - "kong"
+      certificate:
+        home_dir: /etc
+      wasmPlugins:
+      - name: dataclean
+        nickname: 数据清洗
+        description: 清洗掉所有手机号的数据
+        uri: http://release.solarmesh.cn/wasm/data-cleaning.wasm
+        type: 0
+      - name: notice
+        nickname: 通知公告
+        description: 版本更新公告
+        uri: http://release.solarmesh.cn/wasm/notice.wasm
+        type: 0  
+EOF
+
+kubectl rollout restart deploy solar-controller -n service-mesh
 
 
 echo "---------- ---------- ---------- ---------- ---------- ----------"

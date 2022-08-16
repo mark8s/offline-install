@@ -18,4 +18,6 @@ demo
 
 when u run over, you could got a istio and solarmesh .
 
-
+```shell
+kubectl patch svc -n istio-system istio-ingressgateway -p '{"spec":{"externalIPs":["10.10.13.87"]}}'
+```
