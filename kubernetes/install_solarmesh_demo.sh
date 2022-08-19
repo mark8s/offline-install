@@ -7,10 +7,10 @@ func(){
     echo "$0"
     echo "Description:"
     echo "-c     Set ClusterName (default "cluster1")"
-    echo "-t     Set SolarMesh Release Tag, -t kiali (default "kiali")" 
+    echo "-t     Set SolarMesh Release Tag  (default "v1.11.1")" 
     echo "-m     Set MeshId (default "mesh01")"
     echo "-n     Set Network (default "network1")"
-    echo "-p     Set Profile (default "istio")"
+    echo "-p     Set Profile (default "default")"
     echo "-i     Set SolarMesh Hub (default "registry.cn-shenzhen.aliyuncs.com/solarmesh")"
     echo "-v     Set Install Istio version, support 1.9、1.10、1.11、1.12、1.13、1.14 (default 1.11)"
     echo "-d     CleanUp solarmesh、istio"
@@ -55,7 +55,7 @@ if [ ! $CLUSTER ]; then
 fi 
 
 if [ ! $TAG ]; then
-   TAG=kiali
+   TAG=v1.11.1
 fi
 
 if [ ! $MESHID ]; then
@@ -67,7 +67,7 @@ if [ ! $NETWORK ]; then
 fi
 
 if [ ! $PROFILE ]; then
-   PROFILE=istio
+   PROFILE=default
 fi
 
 if [ ! $IMAGE ]; then
