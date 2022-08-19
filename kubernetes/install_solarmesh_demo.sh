@@ -15,7 +15,7 @@ func(){
     echo "-v     Set Install Istio version, support 1.9、1.10、1.11、1.12、1.13、1.14 (default 1.11)"
     echo "-d     CleanUp solarmesh、istio"
     echo "-b     Set BookInfo install namespace (default default)"
-    echo "-k     Set KubeConfig path (default /root/.kube/config)"
+    echo "-k     Set KubeConfig path (default /home/ctg/.kube/config)"
     echo "-w     Patch istio-ingressgateway externalIPs (default 10.10.13.87)"
     exit -1
 }
@@ -79,7 +79,7 @@ if [ ! $VERSION ]; then
 fi
 
 if [ ! $KUBECONFIG ]; then
-   KUBECONFIG=/root/.kube/config
+   KUBECONFIG=/home/ctg/.kube/config
 fi 
 
 if [ ! $NS ]; then
@@ -108,6 +108,8 @@ echo "---------- ---------- ---------- ---------- ---------- ----------"
 echo "---------- ---------- ---------- ---------- ---------- ----------"
 
 istioctl operator init --hub $IMAGE --tag $ISTIO_VERSION
+
+sleep 5
 
 echo "---------- - istio operator inited ......................."
 
@@ -187,6 +189,8 @@ spec:
                 targetPort: 15443       
 EOF
 
+sleep 20
+
 echo "---------- ---------- ---------- ---------- ---------- ----------"
 echo "---------- ---------- ---------- ---------- ---------- ----------"
 echo "---------- ------ Let's install solarmesh ......................."
@@ -194,6 +198,8 @@ echo "---------- ---------- ---------- ---------- ---------- ----------"
 echo "---------- ---------- ---------- ---------- ---------- ----------"
 
 solarctl install solar-mesh --tag $TAG
+
+sleep 3
 
 kubectl create secret generic admin --from-literal=username=admin --from-literal=password=admin -n service-mesh
 
@@ -209,6 +215,8 @@ export ISTIOD_REMOTE_EP=$(kubectl get nodes|awk '{print $1}' |awk 'NR==2'|xargs 
 
 solarctl operator init --external-ip $ISTIOD_REMOTE_EP --eastwest-external-ip $ISTIOD_REMOTE_EP --tag $TAG
 
+sleep 5
+
 kubectl apply -f - <<EOF
 apiVersion: install.solar.io/v1alpha1
 kind: SolarOperator
@@ -222,6 +230,8 @@ spec:
   mesh: $MESHID # 同一个mesh
   network: $NETWORK # 网络的名称
 EOF
+
+sleep 30
 
 echo "---------- ---------- ---------- ---------- ---------- ----------"
 echo "---------- ---------- ---------- ---------- ---------- ----------"
