@@ -365,7 +365,7 @@ EOF
 kubectl rollout restart deploy solar-controller -n service-mesh
 
 
-solarctl install grafana --name $CLUSTER
+#solarctl install grafana --name $CLUSTER
 
 echo "---------- ---------- ---------- ---------- ---------- ----------"
 echo "---------- ---------- ---------- ---------- ---------- ----------"
@@ -375,7 +375,7 @@ echo "---------- ---------- ---------- ---------- ---------- ----------"
 
 sleep 1
 
-solarctl install jaeger --name $CLUSTER
+#solarctl install jaeger --name $CLUSTER
 
 echo "---------- ---------- ---------- ---------- ---------- ----------"
 echo "---------- ---------- ---------- ---------- ---------- ----------"
