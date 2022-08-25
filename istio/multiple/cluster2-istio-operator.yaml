@@ -1,0 +1,73 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: istio-system
+  name: example-istiocontrolplane
+spec:
+  hub: registry.cn-shenzhen.aliyuncs.com/solarmesh
+  tag: v1.11.5
+  profile: demo
+  meshConfig:
+    accessLogFile: /dev/stdout
+    enableTracing: true
+    defaultConfig:
+      proxyMetadata:
+        ISTIO_META_DNS_CAPTURE: "true"
+        ISTIO_META_DNS_AUTO_ALLOCATE: "true"  
+  values:
+    global:
+      meshID: mesh1
+      multiCluster:
+        clusterName: cluster2
+      network: network2
+  components:
+    ingressGateways:
+      - name: istio-ingressgateway
+        enabled: true
+        k8s: 
+          service:
+            ports:
+              - name: promethues
+                port: 9090
+                protocol: TCP
+                targetPort: 9090
+              - name: kiali
+                port: 20001
+                protocol: TCP
+                targetPort: 20001
+              - name: networking-agent
+                port: 7575
+                protocol: TCP
+                targetPort: 7575
+              - name: bookinfo
+                port: 9080
+                protocol: TCP
+                targetPort: 9080
+              - name: grafana
+                port: 3000
+                protocol: TCP
+                targetPort: 3000
+              - name: jaeger
+                port: 16686
+                protocol: TCP
+                targetPort: 16686
+              - name: status-port
+                port: 15021
+                protocol: TCP
+                targetPort: 15021
+              - name: http2
+                port: 80
+                protocol: TCP
+                targetPort: 8080
+              - name: https
+                port: 443
+                protocol: TCP
+                targetPort: 8443
+              - name: tcp
+                port: 31400
+                protocol: TCP
+                targetPort: 31400
+              - name: tls
+                port: 15443
+                protocol: TCP
+                targetPort: 15443     

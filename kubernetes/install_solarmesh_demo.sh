@@ -222,13 +222,13 @@ apiVersion: install.solar.io/v1alpha1
 kind: SolarOperator
 metadata:
   namespace: solar-operator
-  name: $CLUSTER # 记住这里的集群名称，这里需要与 istioOperator 中 clusterName 对应
+  name: abc  # 记住这里的集群名称，这里需要与 istioOperator 中 clusterName 对应
 spec:
   istioVersion: "$VERSION"
-  namespace: service-mesh
-  profile: $PROFILE
-  mesh: $MESHID # 同一个mesh
-  network: $NETWORK # 网络的名称
+  profile: default
+  components:
+    solarGraph:
+      namespace: kiali
 EOF
 
 sleep 30
@@ -364,6 +364,7 @@ EOF
 
 kubectl rollout restart deploy solar-controller -n service-mesh
 
+kubectl patch svc -n istio-system istio-ingressgateway -p '{"spec":{"externalIPs":["10.10.13.87"]}}'
 
 #solarctl install grafana --name $CLUSTER
 
