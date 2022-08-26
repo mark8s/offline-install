@@ -226,9 +226,6 @@ metadata:
 spec:
   istioVersion: "$VERSION"
   profile: default
-  components:
-    solarGraph:
-      namespace: kiali
 EOF
 
 sleep 30
