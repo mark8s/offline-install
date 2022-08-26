@@ -125,7 +125,6 @@ spec:
         checksum/sc-dashboard-provider-config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
         sidecar.istio.io/inject: "false"
     spec:
-      
       serviceAccountName: grafana
       securityContext:
         fsGroup: 472
@@ -133,7 +132,7 @@ spec:
         runAsUser: 472
       containers:
         - name: grafana
-          image: "grafana/grafana:7.5.5"
+          image: "registry.cn-shenzhen.aliyuncs.com/solarmesh/grafana:7.5.5"
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: config
