@@ -1,0 +1,21 @@
+apiVersion: chaosblade.io/v1alpha1
+kind: ChaosBlade
+metadata:
+  name: delay-pod-network-by-names
+spec:
+  experiments:
+  - scope: pod
+    target: network
+    action: loss
+    desc: "loss pod network by names"
+    matchers:
+    - name: names
+      value:
+      - "solar-controller-8557df6d8c-268g2"
+    - name: namespace
+      value:
+      - "service-mesh"
+    - name: percent
+      value: ["100"]
+    - name: interface
+      value: ["eth0"]
