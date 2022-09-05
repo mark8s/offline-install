@@ -14,6 +14,7 @@ func(){
     echo "-i     Set SolarMesh Hub (default "registry.cn-shenzhen.aliyuncs.com/solarmesh")"
     echo "-v     Set Install Istio version, support 1.9、1.10、1.11、1.12、1.13、1.14 (default 1.11)"
     echo "-d     CleanUp solarmesh、istio"
+    echo "-r     CleanUp bookinfo, support -b detele bookinfo"
     echo "-b     Set BookInfo install namespace (default default)"
     echo "-k     Set KubeConfig path (default /home/ctg/.kube/config)"
     echo "-w     Patch istio-ingressgateway externalIPs (default 10.10.13.87)"
@@ -22,7 +23,7 @@ func(){
 
 DELETE=false
 
-while getopts 'c:t:m:n:p:i:v:b:k:w:d' OPT; do
+while getopts 'c:t:m:n:p:i:v:b:k:w:r:d' OPT; do
     case $OPT in
         c) CLUSTER="$OPTARG";;
         t) TAG="$OPTARG";;
@@ -34,6 +35,7 @@ while getopts 'c:t:m:n:p:i:v:b:k:w:d' OPT; do
         b) NS="$OPTARG";;
         k) KUBECONFIG="$OPTARG";;
         w) PATCH="$OPTARG";;
+        r) REMOVE="$OPTARG";; 
         d) DELETE=true;;
         h) func;; 
         ?) func;;
@@ -100,6 +102,13 @@ elif [ $VERSION = "1.14" ]; then
   ISTIO_VERSION=1.14.1
 fi
 
+  ## delete bookinfo
+if [ $REMOVE = "b" ]; then
+     kubectl delete deploy details-v1 productpage-v1 ratings-v1 reviews-v1 reviews-v2  reviews-v3  -n $NS   
+     kubectl delete svc details productpage ratings reviews  -n $NS  
+   exit 0
+fi
+   
 
 echo "---------- ---------- ---------- ---------- ---------- ----------"
 echo "---------- ---------- ---------- ---------- ---------- ----------"
@@ -289,6 +298,10 @@ do
   fi
 done
 
+echo "auto inject default namespace"
+
+kubectl label namespace default istio-injection=enabled --overwrite
+
 kubectl patch svc -n $NS productpage -p '{
    "spec": {
         "ports": [{
@@ -360,6 +373,8 @@ data:
 EOF
 
 kubectl rollout restart deploy solar-controller -n service-mesh
+
+kubectl rollout restart deploy
 
 kubectl patch svc -n istio-system istio-ingressgateway -p '{"spec":{"externalIPs":["10.10.13.87"]}}'
 
