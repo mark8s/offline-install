@@ -231,7 +231,7 @@ apiVersion: install.solar.io/v1alpha1
 kind: SolarOperator
 metadata:
   namespace: solar-operator
-  name: abc  # 记住这里的集群名称，这里需要与 istioOperator 中 clusterName 对应
+  name: $CLUSTER  # 记住这里的集群名称，这里需要与 istioOperator 中 clusterName 对应
 spec:
   istioVersion: "$VERSION"
   profile: default
