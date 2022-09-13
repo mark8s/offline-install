@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reviews-error
+  labels:
+    app: reviews
+    version: error
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reviews
+      version: error
+  template:
+    metadata:
+      labels:
+        app: reviews
+        version: error
+    spec:
+      serviceAccountName: bookinfo-reviews
+      containers:
+      - name: reviews
+        image: registry.cn-shenzhen.aliyuncs.com/solarmesh/examples-bookinfo-reviews-error:1.15.0
+        imagePullPolicy: Always
+        env:
+        - name: LOG_DIR
+          value: "/tmp/logs"
+        ports:
+        - containerPort: 9080
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: wlp-output
+          mountPath: /opt/ibm/wlp/output
+      volumes:
+      - name: wlp-output
+        emptyDir: {}
+      - name: tmp
+        emptyDir: {}
