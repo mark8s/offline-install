@@ -37,7 +37,9 @@ Container：
 ## 安装
 在 [Release](https://github.com/chaosblade-io/chaosblade-operator/releases) 地址下载最新的 `chaosblade-operator-VERSION-v3.tgz` 包
 
-使用 `helm install chaosblade-operator chaosblade-operator-VERSION-v3.tgz --namespace kube-system` 命令安装
+如：`wget https://ghproxy.com/https://github.com/chaosblade-io/chaosblade-operator/releases/download/v1.3.0/chaosblade-operator-1.3.0-v3.tgz` 
+
+使用 `helm install chaosblade-operator chaosblade-operator-1.3.0-v3.tgz --namespace kube-system` 命令安装
 
 使用 `kubectl get pod -l part-of=chaosblade -n kube-system` 查看 Pod 的安装状态，如果都是 running 状态，说明安装成功
 
