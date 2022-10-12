@@ -1,0 +1,8 @@
+apiVersion: install.solar.io/v1alpha1
+kind: SolarOperator
+metadata:
+  name: cluster1
+  namespace: solar-operator
+spec:
+  istioVersion: "1.11"  ## 对应您Istio的安装版本
+  profile: default
