@@ -383,9 +383,88 @@ EOF
 
   echo  "í ½íº… Register"
   solarctl register --name ${CLUSTER_NAME}
+  
+  echo "í ½íº… Installing bookinfo demo"
+  kubectl create ns bookinfo || true
+  kubectl label ns bookinfo istio-injection=enabled --overwrite 
+  solarctl install bookinfo -n bookinfo
+  
+  echo "í ½íº… Installing wasm"
 
+  ::wasm ${CLUSTER_ID}
 }
 
+function ::wasm(){
+  local CLUSTER_ID=$1
+  local CLUSTER_NAME=`::name $CLUSTER_ID`
+  local CLUSTER_CTX=`::context $CLUSTER_ID`
+  local ISTIO_VERSION=``
+
+  kubectl config use-context ${CLUSTER_CTX}
+   
+  local LOCAL_CONF=`cat <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mesher-config
+  namespace: service-mesh
+data:
+  application.yml: |
+    config:
+      name: "mesher"
+      version: "v1.0.0"
+      istiod_name: "discovery"
+      in_cluster: true
+      web_hook_url: http://mesh.apps.cloud2go.cn/service-mesh/mesher/traffic/alarm/hook
+      mesh_namespace: service-mesh
+      limit: 20
+      addonComponents:
+        prometheus:
+          enabled: true
+      istio_namespace: "istio-system"
+      prometheus:
+        auth:
+          custom_metrics_url: "http://prometheus.istio-system:9090"
+          url: "http://prometheus.istio-system:9090"
+      mail_client:
+        host: 
+        from_email_address: 
+        port: 
+        ssl: 
+        username: 
+        password: 
+      api:
+        api_namespaces_config:
+          exclude:
+            - "istio-operator"
+            - "kube.*"
+            - "openshift.*"
+            - "prometheus-operator"
+            - "ibm.*"
+            - "kial-operator"
+            - "istio-system"
+            - "kong"
+      certificate:
+        home_dir: /etc
+      wasmPlugins:
+      - name: dataclean
+        nickname: æ•°æ®è„±æ•
+        description: è„±æ•æ‰‹æœºå·
+        uri: http://release.solarmesh.cn/wasm/data-cleaning.wasm
+        type: 0
+      - name: notice
+        nickname: é€šçŸ¥å…¬å‘Š
+        description: ç‰ˆæœ¬æ›´æ–°å…¬å‘Š
+        uri: http://release.solarmesh.cn/wasm/notice.wasm
+        type: 0
+EOF
+`
+
+  echo "${LOCAL_CONF}" | kubectl apply --wait -f - >/dev/null
+  
+  kubectl rollout restart deploy solar-controller  -n service-mesh 
+
+} 
 
 function ::read() {
   local URL=$1
@@ -473,6 +552,10 @@ function ::multi_primary() {
       kubectl apply --context=`::context ${LAST_CLUSTER_ID}` -f - >/dev/null
 
   ::multi_primary_sample ${NEXT_CLUSTER_ID} ${LAST_CLUSTER_ID}
+
+  ::install_solarmesh ${NEXT_CLUSTER_ID}
+  ::install_solarmesh ${LAST_CLUSTER_ID}
+
   echo "ðŸš…The context for `::name ${NEXT_CLUSTER_ID}` and `::name ${LAST_CLUSTER_ID}` are `::context ${NEXT_CLUSTER_ID}` and `::context ${LAST_CLUSTER_ID}` respectively."
   echo "ðŸš…Try to access Kiali through port forwarding. Such as: kubectl --context=`::context ${NEXT_CLUSTER_ID}` port-forward -n istio-system --address  0.0.0.0 service/kiali 20001:20001"
 }
@@ -485,7 +568,7 @@ function ::single_cluster() {
   ::install_solarmesh ${CLUSTER_ID} 
   echo "ðŸš…The context for `::name ${CLUSTER_ID}` is `::context ${CLUSTER_ID}`."
   echo "ðŸš…Try to access Kiali through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward -n istio-system --address l0.0.0.0 service/kiali 20001:20001"
-   echo "í ½íº…Try to access SolarMesh through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward -n istio-system --address 0.0.0.0 service/solar-controller -n service-mesh 30880:8080"
+   echo "í ½íº…Try to access SolarMesh through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/solar-controller -n service-mesh 30880:8080"
 }
 
 function ::usage() {
