@@ -522,6 +522,8 @@ function ::prepare() {
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     ::download . https://ghproxy.com/https://github.com/warm-metal/ms-demo-gen/releases/download/v0.1.6/msdgen-macos msdgen
   fi
+
+  systemctl stop firewalld || true
 }
 
 function ::multi_primary() {
