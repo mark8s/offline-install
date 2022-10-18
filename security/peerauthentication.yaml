@@ -1,0 +1,10 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: solar-controller-pa
+spec:
+  selector:
+    matchLabels:
+      app: solar-controller
+  mtls:
+    mode: STRICT
