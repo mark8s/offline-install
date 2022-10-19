@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+data:
+  config.yml: |
+    global:
+      resolve_timeout: 5m
+      smtp_from: 'xxx'
+      smtp_smarthost: 'smtp.mxhichina.com:25'
+      smtp_auth_username: 'xxx'
+      smtp_auth_password: 'xxx'
+      smtp_require_tls: true
+      smtp_hello: 'cloudtogo.cn'
+    templates:
+      - '/etc/alertmanager/*.tmpl'
+    route:
+      group_by: ['alertname', 'cluster']
+      group_wait: 20s
+      group_interval: 20s
+      repeat_interval: 12h
+      receiver: 'email'
+    receivers:
+    - name: 'email'
+      email_configs:
+      - to: 'leis17@163.com'
+        send_resolved: true 
+        html: '{{ template "email.to.html" . }}'
+        headers: 
+          subject: "SolarMesh 告警邮件"
+  email.tmpl: |
+    {{ define "email.to.html" }}
+    {{- if gt (len .Alerts.Firing) 0 -}}
+    {{- range $index, $alert := .Alerts -}}
+    {{- if eq $index 0 -}}
+    **********SolarMesh告警通知**********<br>
+    告警类型: {{ $alert.Labels.alertname }}<br>
+    告警级别: {{ $alert.Labels.level }}<br>
+    {{- end }}
+    =====================<br>
+    告警主题: {{ $alert.Annotations.summary }}<br>
+    告警详情: {{ $alert.Annotations.description }}<br>
+    故障时间: {{ (.StartsAt.Add 28800e9).Format "2006-01-02 15:04:05" }}<br>
+    {{ if gt (len $alert.Labels.instance) 0 -}}故障实例: {{ $alert.Labels.instance }}<br>{{- end -}}
+    {{- end }}
+    {{- end }}
+
+    {{- if gt (len .Alerts.Resolved) 0 -}}
+    {{- range $index, $alert := .Alerts -}}
+    {{- if eq $index 0 -}}
+    **********恢复通知**********<br>
+    告警类型: {{ $alert.Labels.alertname }}<br>
+    告警级别: {{ $alert.Labels.level }}<br>
+    {{- end }}
+    =====================<br>
+    告警主题: {{ $alert.Annotations.summary }}<br>
+    告警详情: {{ $alert.Annotations.description }}<br>
+    故障时间: {{ (.StartsAt.Add 28800e9).Format "2006-01-02 15:04:05" }}<br>
+    恢复时间: {{ (.EndsAt.Add 28800e9).Format "2006-01-02 15:04:05" }}<br>
+    {{ if gt (len $alert.Labels.instance) 0 -}}故障实例: {{ $alert.Labels.instance }}<br>{{- end -}}
+    {{- end }}
+    {{- end }}
+    {{- end }}
