@@ -567,10 +567,27 @@ function ::single_cluster() {
   local MESH_ID=mesh1
   ::create_cluster ${CLUSTER_ID} ${API_SERVER_ADDR}
   ::install_mesh ${CLUSTER_ID} ${MESH_ID}
-  ::install_solarmesh ${CLUSTER_ID} 
+ # ::install_solarmesh ${CLUSTER_ID} 
   echo "ðŸš…The context for `::name ${CLUSTER_ID}` is `::context ${CLUSTER_ID}`."
   echo "ðŸš…Try to access Kiali through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward -n istio-system --address l0.0.0.0 service/kiali 20001:20001"
    echo "í ½íº…Try to access SolarMesh through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/solar-controller -n service-mesh 30880:8080"
+}
+
+function ::k8s(){
+  local CLUSTER_ID=`::find_next_cluster_id`
+  local MESH_ID=mesh1
+  ::create_cluster ${CLUSTER_ID} ${API_SERVER_ADDR}  
+}
+
+function ::single_cluster_solarmesh() {
+  local CLUSTER_ID=`::find_next_cluster_id`
+  local MESH_ID=mesh1
+  ::create_cluster ${CLUSTER_ID} ${API_SERVER_ADDR}
+  ::install_mesh ${CLUSTER_ID} ${MESH_ID}
+  ::install_solarmesh ${CLUSTER_ID} 
+  echo "í ½íº…The context for `::name ${CLUSTER_ID}` is `::context ${CLUSTER_ID}`."
+  echo "í ½íº…Try to access Kiali through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward -n istio-system --address l0.0.0.0 service/kiali 20001:20001"
+   echo "<d83d><de85>Try to access SolarMesh through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/solar-controller -n service-mesh 30880:8080"
 }
 
 function ::usage() {
@@ -580,7 +597,9 @@ function ::usage() {
   echo "Arguments:"
   echo "  multi-primary: Build a multi-cluster mesh is composed of 2 KinD clusters."
   echo "  single: Build a KindD cluster with Istio installed"
+  echo "  single-solarmesh: Build a KindD cluster with Istio and SolarMesh installed"
   echo "  msd: Generate microservice demo manifests. One more argument is given as the number of services."
+  echo "  k8s: Build a KindD cluster with Kubernetes installed"
 }
 
 function ::main() {
@@ -593,10 +612,18 @@ function ::main() {
         ::prepare
         ::single_cluster
         ;;
+      "single-solarmesh")
+        ::prepare
+        ::single_cluster_with_solarmesh
+        ;; 
       "msd")
         ::prepare
         shift
         ./${CACHE_DIR}/msdgen $@
+        ;;
+      "k8s")
+        ::prepare
+        ::k8s
         ;;
       *)
         ::usage
