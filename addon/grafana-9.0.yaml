@@ -692,12 +692,14 @@ metadata:
 data:
   allow-snippet-annotations: "false"
   grafana.ini: |
+    app_mode = development
     [analytics]
     check_for_updates = true
     [grafana_net]
     url = https://grafana.net
     [log]
     mode = console
+    filters = auth:debug
     [paths]
     data = /var/lib/grafana/
     logs = /var/log/grafana
@@ -707,10 +709,23 @@ data:
     enabled = true
     host = smtp.mxhichina.com:465
     ssl = true
-    user = @cloudtogo.cn
+    user = pipeline@cloudtogo.cn
     password = 
-    from_address = @cloudtogo.cn
-    from_name = 
+    from_address = pipeline@cloudtogo.cn
+    from_name = pipeline
+    [server]
+    serve_from_sub_path = true
+    root_url = %(protocol)s://%(domain)s:%(http_port)s/component/grafana/cluster/cluster1
+    domain = localhost
+    [security]
+    allow_embedding = true
+    cookie_secure = false
+    [users]
+    default_theme = light
+    [auth]
+    admin_user = solarmesh
+    disable_login_form = true
+    login_cookie_name = grafana_session
   datasources.yaml: |
     apiVersion: 1
     datasources:
