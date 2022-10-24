@@ -709,7 +709,7 @@ data:
     host = smtp.mxhichina.com:465
     ssl = true
     user = pipeline@cloudtogo.cn
-    password = 9191!1N1 
+    password =  
     from_address = pipeline@cloudtogo.cn
     from_name = pipeline
     [server]
