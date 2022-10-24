@@ -1,3 +1,33 @@
+# 持久化版本的grafana
+#grafana-volume.yaml
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: grafana-pv
+  namespace: istio-system
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /grafana/
+
+--- 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana
+  namespace: istio-system
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
 # Source: grafana/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -838,6 +868,7 @@ spec:
               subPath: grafana.ini
             - name: storage
               mountPath: "/var/lib/grafana"
+              readOnly: false   
             - name: dashboards-istio
               mountPath: "/var/lib/grafana/dashboards/istio"
             - name: dashboards-istio-services
@@ -903,7 +934,9 @@ spec:
           configMap:
             name: k8s-pods-dashboard
         - name: storage
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: grafana
+
 ---
 
 apiVersion: v1
