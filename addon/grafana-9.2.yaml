@@ -719,11 +719,11 @@ data:
     domain = localhost
     [security]
     allow_embedding = true
-    cookie_secure = false
     [users]
     default_theme = light
     [auth]
     admin_user = solarmesh
+    admin_password = solarmesh
     disable_login_form = true
     login_cookie_name = grafana_session
   datasources.yaml: |
@@ -830,7 +830,7 @@ spec:
       enableServiceLinks: true
       containers:
         - name: grafana
-          image: "grafana/grafana:9.0.1"
+          image: "grafana/grafana:9.2.1"
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: config
