@@ -60,6 +60,50 @@ function ::kubectlwait() {
   ::kubectlwait_once $@
 }
 
+function ::create_cluster_with_mounts() {
+  local CLUSTER_ID=$1
+	local CLUSTER_NAME=`::name $CLUSTER_ID`
+  local CLUSTER_CTX=`::context $CLUSTER_ID`
+	local API_SERVER_ADDR=$2
+	local CLUSTER_CONF=`cat <<EOF
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  apiServerAddress: "${API_SERVER_ADDR}"
+nodes:
+- role: control-plane
+  extraMounts:
+    - hostPath: /home/ctg/solarmesh/grafana
+      containerPath: /grafana   
+EOF
+`
+
+	echo "${CLUSTER_CONF}" | HTTP_PROXY= HTTPS_PROXY= http_proxy= https_proxy= kind create cluster -n "${CLUSTER_NAME}" --image kindest/node:v1.25.0 --config - > /dev/null
+  echo "ðŸš…Installing LoadBalancer"
+  kubectl apply --wait -f ${CACHE_DIR}/metallb-native.yaml >/dev/null
+  ::kubectlwait ${CLUSTER_CTX} metallb-system
+  
+  local LB_IP_SUBNET=`::calc_network $CLUSTER_ID`
+  local LB_CONF=`cat <<EOF
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: example
+  namespace: metallb-system
+spec:
+  addresses:
+  - ${LB_IP_SUBNET}
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: empty
+  namespace: metallb-system
+EOF
+`
+  echo "${LB_CONF}" | kubectl apply --wait -f - >/dev/null
+}
+
 function ::create_cluster() {
   local CLUSTER_ID=$1
 	local CLUSTER_NAME=`::name $CLUSTER_ID`
@@ -74,7 +118,7 @@ EOF
 `
 
 	echo "${CLUSTER_CONF}" | HTTP_PROXY= HTTPS_PROXY= http_proxy= https_proxy= kind create cluster -n "${CLUSTER_NAME}" --image kindest/node:v1.25.0 --config - > /dev/null
-  echo "ðŸš…Installing LoadBalancer"
+  echo "í ½íº…Installing LoadBalancer"
   kubectl apply --wait -f ${CACHE_DIR}/metallb-native.yaml >/dev/null
   ::kubectlwait ${CLUSTER_CTX} metallb-system
   
@@ -220,7 +264,7 @@ EOF
 `
   echo "${GATEWAY}" | kubectl --context="${CLUSTER_CTX}" apply -n istio-system -f - > /dev/null
   kubectl --context="${CLUSTER_CTX}" apply -f ${CACHE_DIR}/prometheus.yaml > /dev/null
-  kubectl --context="${CLUSTER_CTX}" apply -f ${CACHE_DIR}/grafana.yaml > /dev/null
+ # kubectl --context="${CLUSTER_CTX}" apply -f ${CACHE_DIR}/grafana.yaml > /dev/null
   kubectl --context="${CLUSTER_CTX}" apply -f ${CACHE_DIR}/kiali.yaml > /dev/null
 }
 
@@ -386,7 +430,6 @@ EOF
   
   echo "í ½íº… Installing bookinfo demo"
   kubectl create ns bookinfo || true
-  kubectl label ns bookinfo istio-injection=enabled --overwrite 
   solarctl install bookinfo -n bookinfo
   
   echo "í ½íº… Installing wasm"
@@ -509,7 +552,7 @@ function ::prepare() {
   ::download . https://ghproxy.com/https://raw.githubusercontent.com/metallb/metallb/v0.13.5/config/manifests/metallb-native.yaml
   ::download . https://ghproxy.com/https://raw.githubusercontent.com/istio/istio/${ISTIO_VERSION}/samples/addons/prometheus.yaml
   ::download . https://ghproxy.com/https://raw.githubusercontent.com/istio/istio/${ISTIO_VERSION}/samples/addons/kiali.yaml
-  ::download . https://ghproxy.com/https://raw.githubusercontent.com/istio/istio/release-1.15/samples/addons/grafana.yaml
+ #::download . https://ghproxy.com/https://raw.githubusercontent.com/istio/istio/release-1.15/samples/addons/grafana.yaml
 
   ::download samples/helloworld https://ghproxy.com/https://raw.githubusercontent.com/istio/istio/${ISTIO_VERSION}/samples/helloworld/helloworld.yaml
   ::download samples/sleep https://ghproxy.com/https://raw.githubusercontent.com/istio/istio/${ISTIO_VERSION}/samples/sleep/sleep.yaml
@@ -575,17 +618,21 @@ function ::single_cluster() {
 function ::k8s(){
   local CLUSTER_ID=`::find_next_cluster_id`
   local MESH_ID=mesh1
-  ::create_cluster ${CLUSTER_ID} ${API_SERVER_ADDR}  
+  ::create_cluster  ${CLUSTER_ID} ${API_SERVER_ADDR}  
 }
 
-function ::single_cluster_solarmesh() {
+function ::k8s_with_mounts(){
   local CLUSTER_ID=`::find_next_cluster_id`
   local MESH_ID=mesh1
-  ::create_cluster ${CLUSTER_ID} ${API_SERVER_ADDR}
-  ::install_mesh ${CLUSTER_ID} ${MESH_ID}
-  ::install_solarmesh ${CLUSTER_ID} 
-  echo "í ½íº…The context for `::name ${CLUSTER_ID}` is `::context ${CLUSTER_ID}`."
-  echo "í ½íº…Try to access Kiali through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward -n istio-system --address l0.0.0.0 service/kiali 20001:20001"
+  ::create_cluster_with_mounts ${CLUSTER_ID} ${API_SERVER_ADDR}
+}
+
+function ::solarmesh(){
+  local LAST_CLUSTER=`kind get clusters | grep cluster | tail -1`
+  local MESH_ID=mesh1
+  ::install_solarmesh ${LAST_CLUSTER}
+  echo "<d83d><de85>The context for `::name ${CLUSTER_ID}` is `::context ${CLUSTER_ID}`."
+  echo "<d83d><de85>Try to access Kiali through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward -n istio-system --address l0.0.0.0 service/kiali 20001:20001"
    echo "<d83d><de85>Try to access SolarMesh through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/solar-controller -n service-mesh 30880:8080"
 }
 
@@ -596,9 +643,10 @@ function ::usage() {
   echo "Arguments:"
   echo "  multi-primary: Build a multi-cluster mesh is composed of 2 KinD clusters."
   echo "  single: Build a KindD cluster with Istio installed"
-  echo "  single-solarmesh: Build a KindD cluster with Istio and SolarMesh installed"
+  echo "  solarmesh: Install solarmesh"
   echo "  msd: Generate microservice demo manifests. One more argument is given as the number of services."
   echo "  k8s: Build a KindD cluster with Kubernetes installed"
+  echo "  k8s-mount: Build a KindD k8s cluster with local storage volumes"
 }
 
 function ::main() {
@@ -611,10 +659,6 @@ function ::main() {
         ::prepare
         ::single_cluster
         ;;
-      "single-solarmesh")
-        ::prepare
-        ::single_cluster_solarmesh
-        ;; 
       "msd")
         ::prepare
         shift
@@ -624,6 +668,14 @@ function ::main() {
         ::prepare
         ::k8s
         ;;
+      "k8s-mount")
+        ::prepare
+        ::k8s_k8s_with_mounts
+        ;;
+      "solarmesh")
+        ::prepare
+        ::solarmesh
+        ;; 
       *)
         ::usage
         ;;
