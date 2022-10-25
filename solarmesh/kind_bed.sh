@@ -435,6 +435,14 @@ EOF
   echo "í ½íº… Installing wasm"
 
   ::wasm ${CLUSTER_ID}
+
+  echo "Installing grafana"
+  solarctl install grafana --name ${CLUSTER_NAME}
+ 
+  echo "Try to access SolarMesh through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/solar-controller -n service-mesh 30880:8080"
+  echo "Try to access Bookinfo through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/productpage -n bookinfo 9080:9080"
+  echo "Try to access Grafana through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/grafana -n solarmesh-monitoring 3000:3000"
+  
 }
 
 function ::wasm(){
@@ -612,7 +620,16 @@ function ::single_cluster() {
   ::install_mesh ${CLUSTER_ID} ${MESH_ID}
   echo "ðŸš…The context for `::name ${CLUSTER_ID}` is `::context ${CLUSTER_ID}`."
   echo "ðŸš…Try to access Kiali through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward -n istio-system --address l0.0.0.0 service/kiali 20001:20001"
-   echo "í ½íº…Try to access SolarMesh through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/solar-controller -n service-mesh 30880:8080"
+}
+
+function ::single_cluster_solarmesh() {
+  local CLUSTER_ID=`::find_next_cluster_id`
+  local MESH_ID=mesh1
+  ::create_cluster ${CLUSTER_ID} ${API_SERVER_ADDR}
+  ::install_mesh ${CLUSTER_ID} ${MESH_ID}
+  ::install_solarmesh ${CLUSTER_ID} 
+  echo "The context for `::name ${CLUSTER_ID}` is `::context ${CLUSTER_ID}`."
+  echo "Try to access Kiali through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward -n istio-system --address l0.0.0.0 service/kiali 20001:20001"
 }
 
 function ::k8s(){
@@ -631,9 +648,10 @@ function ::solarmesh(){
   local LAST_CLUSTER=`kind get clusters | grep cluster | tail -1`
   local MESH_ID=mesh1
   ::install_solarmesh ${LAST_CLUSTER}
-  echo "<d83d><de85>The context for `::name ${CLUSTER_ID}` is `::context ${CLUSTER_ID}`."
-  echo "<d83d><de85>Try to access Kiali through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward -n istio-system --address l0.0.0.0 service/kiali 20001:20001"
-   echo "<d83d><de85>Try to access SolarMesh through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/solar-controller -n service-mesh 30880:8080"
+  echo "The context for `::name ${CLUSTER_ID}` is `::context ${CLUSTER_ID}`."
+  echo "Try to access SolarMesh through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/solar-controller -n service-mesh 30880:8080"
+  echo "Try to access Bookinfo through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/productpage -n bookinfo 9080:9080"
+  echo "Try to access Grafana through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/grafana -n solarmesh-monitoring 3000:3000"
 }
 
 function ::usage() {
@@ -643,6 +661,7 @@ function ::usage() {
   echo "Arguments:"
   echo "  multi-primary: Build a multi-cluster mesh is composed of 2 KinD clusters."
   echo "  single: Build a KindD cluster with Istio installed"
+  echo "  single-solarmesh: Build a KindD cluster with Istio and SolarMesh installed"
   echo "  solarmesh: Install solarmesh"
   echo "  msd: Generate microservice demo manifests. One more argument is given as the number of services."
   echo "  k8s: Build a KindD cluster with Kubernetes installed"
@@ -659,6 +678,10 @@ function ::main() {
         ::prepare
         ::single_cluster
         ;;
+      "single-solarmesh")
+        ::prepare
+        ::single_cluster_solarmesh
+        ;; 
       "msd")
         ::prepare
         shift
