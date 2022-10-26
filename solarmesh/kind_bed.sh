@@ -389,9 +389,13 @@ function ::install_solarmesh(){
   local CLUSTER_CTX=`::context $CLUSTER_ID` 
   local ISTIO_VERSION=``    
   
+  if [ -n "$2" ] ;then
+    CLUSTER_CTX=$2  
+  fi
+
   kubectl config use-context ${CLUSTER_CTX}
   
-  echo "í ½íº…Installing SolarMesh"
+  echo "Installing SolarMesh"
   
   solarctl install solar-mesh 
 
@@ -401,7 +405,7 @@ function ::install_solarmesh(){
   kubectl create secret generic admin --from-literal=username=admin --from-literal=password=admin -n service-mesh
   kubectl label secret admin app=solar-controller -n service-mesh  
    
- echo "í ½íº…Installing SolarMesh Bussiness"
+ echo "Installing SolarMesh Bussiness"
 
   export ISTIOD_REMOTE_EP=$(kubectl get nodes|awk '{print $1}' |awk 'NR==2'|xargs -n 1 kubectl get nodes  -o jsonpath='{.status.addresses[0].address}')
   solarctl operator init --external-ip $ISTIOD_REMOTE_EP --eastwest-external-ip $ISTIOD_REMOTE_EP 
@@ -425,33 +429,28 @@ EOF
   ::kubectlwait ${CLUSTER_CTX} service-mesh
   ::kubectlwait ${CLUSTER_CTX} solar-operator 
 
-  echo  "í ½íº… Register"
+  echo  "Register"
   solarctl register --name ${CLUSTER_NAME}
   
-  echo "í ½íº… Installing bookinfo demo"
+  echo "Installing bookinfo demo"
   kubectl create ns bookinfo || true
   solarctl install bookinfo -n bookinfo
   
-  echo "í ½íº… Installing wasm"
-
-  ::wasm ${CLUSTER_ID}
-
   echo "Installing grafana"
   solarctl install grafana --name ${CLUSTER_NAME}
  
-  echo "Try to access SolarMesh through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/solar-controller -n service-mesh 30880:8080"
-  echo "Try to access Bookinfo through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/productpage -n bookinfo 9080:9080"
-  echo "Try to access Grafana through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/grafana -n solarmesh-monitoring 3000:3000"
+  echo "Installing wasm"
+  ::wasm ${CLUSTER_CTX}
+
+  echo "Try to access SolarMesh through port forwarding. Such as: kubectl --context=${CLUSTER_CTX}  port-forward --address 0.0.0.0 service/solar-controller -n service-mesh 30880:8080"
+  echo "Try to access Bookinfo through port forwarding. Such as: kubectl --context=${CLUSTER_CTX} port-forward --address 0.0.0.0 service/productpage -n bookinfo 9080:9080"
+  echo "Try to access Grafana through port forwarding. Such as: kubectl --context=${CLUSTER_CTX} port-forward --address 0.0.0.0 service/grafana -n solarmesh-monitoring 3000:3000"
   
 }
 
 function ::wasm(){
-  local CLUSTER_ID=$1
-  local CLUSTER_NAME=`::name $CLUSTER_ID`
-  local CLUSTER_CTX=`::context $CLUSTER_ID`
-  local ISTIO_VERSION=``
-
-  kubectl config use-context ${CLUSTER_CTX}
+ 
+ kubectl config use-context $1
    
   local LOCAL_CONF=`cat <<EOF
 apiVersion: v1
@@ -546,6 +545,33 @@ function ::download() {
   popd > /dev/null
 }
 
+function ::simple_prepare() {
+  command -v docker >/dev/null || (echo "Install docker first." && exit 1)
+  command -v make >/dev/null || (echo "Install make first." && exit 1)
+  command -v ifconfig >/dev/null || (echo "Install ifconfig first." && exit 1)
+  command -v kubectl >/dev/null || (echo "Install kubectl from https://github.com/kubernetes/kubernetes/releases ." && exit 1)
+  command -v istioctl >/dev/null || (echo "Install istioctl from https://gcsweb.istio.io/gcs/istio-release/releases/1.15.0/" && exit 1)
+  command -v solarctl >/dev/null || (echo "Install istioctl from http://release.solarmesh.cn/solar/v1.11/" && exit 1)
+
+  ::download . https://ghproxy.com/https://raw.githubusercontent.com/metallb/metallb/v0.13.5/config/manifests/metallb-native.yaml
+  ::download . https://ghproxy.com/https://raw.githubusercontent.com/istio/istio/${ISTIO_VERSION}/samples/addons/prometheus.yaml
+  ::download . https://ghproxy.com/https://raw.githubusercontent.com/istio/istio/${ISTIO_VERSION}/samples/addons/kiali.yaml
+  ::download samples/helloworld https://ghproxy.com/https://raw.githubusercontent.com/istio/istio/${ISTIO_VERSION}/samples/helloworld/helloworld.yaml
+  ::download samples/sleep https://ghproxy.com/https://raw.githubusercontent.com/istio/istio/${ISTIO_VERSION}/samples/sleep/sleep.yaml
+
+  ::download . https://ghproxy.com/https://raw.githubusercontent.com/istio/istio/${ISTIO_VERSION}/tools/certs/Makefile.selfsigned.mk
+  ::download . https://ghproxy.com/https://raw.githubusercontent.com/istio/istio/${ISTIO_VERSION}/tools/certs/common.mk
+  
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    ::download . https://ghproxy.com/https://github.com/warm-metal/ms-demo-gen/releases/download/v0.1.6/msdgen-linux msdgen
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    ::download . https://ghproxy.com/https://github.com/warm-metal/ms-demo-gen/releases/download/v0.1.6/msdgen-macos msdgen
+  fi
+
+  systemctl stop firewalld || true
+}
+
+
 function ::prepare() {
   command -v docker >/dev/null || (echo "Install docker first." && exit 1)
   command -v make >/dev/null || (echo "Install make first." && exit 1)
@@ -632,6 +658,128 @@ function ::single_cluster_solarmesh() {
   echo "Try to access Kiali through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward -n istio-system --address l0.0.0.0 service/kiali 20001:20001"
 }
 
+function ::istio(){
+  local CLUSTER_NAME=cluster1
+  local NETWORK_ID=network1
+  local MESH_ID=mesh1
+  local OPERATOR_MESH=`cat <<EOF
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  components:
+    ingressGateways:
+      - name: istio-ingressgateway
+        enabled: true
+        k8s: 
+          service:
+            ports:
+              - name: promethues
+                port: 9090
+                protocol: TCP
+                targetPort: 9090
+              - name: kiali
+                port: 20001
+                protocol: TCP
+                targetPort: 20001
+              - name: networking-agent
+                port: 7575
+                protocol: TCP
+                targetPort: 7575
+              - name: bookinfo
+                port: 9080
+                protocol: TCP
+                targetPort: 9080
+              - name: grafana
+                port: 3000
+                protocol: TCP
+                targetPort: 3000
+              - name: jaeger
+                port: 16686
+                protocol: TCP
+                targetPort: 16686
+              - name: status-port
+                port: 15021
+                protocol: TCP
+                targetPort: 15021
+              - name: http2
+                port: 80
+                protocol: TCP
+                targetPort: 8080
+              - name: https
+                port: 443
+                protocol: TCP
+                targetPort: 8443
+              - name: tcp
+                port: 31400
+                protocol: TCP
+                targetPort: 31400
+              - name: tls
+                port: 15443
+                protocol: TCP
+                targetPort: 15443
+      - name: istio-eastwestgateway
+        label:
+          istio: eastwestgateway
+          app: istio-eastwestgateway
+          topology.istio.io/network: ${NETWORK_ID}
+        enabled: true
+        k8s:
+          env:
+            # traffic through this gateway should be routed inside the network
+            - name: ISTIO_META_REQUESTED_NETWORK_VIEW
+              value: ${NETWORK_ID}
+          service:
+            ports:
+              - name: status-port
+                port: 15021
+                targetPort: 15021
+              - name: tls
+                port: 15443
+                targetPort: 15443
+              - name: tls-istiod
+                port: 15012
+                targetPort: 15012
+              - name: tls-webhook
+                port: 15017
+                targetPort: 15017
+  values:
+    gateways:
+      istio-ingressgateway:
+        injectionTemplate: gateway
+    global:
+      meshID: ${MESH_ID}
+      multiCluster:
+        clusterName: ${CLUSTER_NAME}
+      network: ${NETWORK_ID}
+EOF
+`
+  echo "í ½íº…Installing Istio"
+  echo "${OPERATOR_MESH}" | istioctl install -y -f- > /dev/null
+
+	local GATEWAY=`cat <<EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: cross-network-gateway
+spec:
+  selector:
+    istio: eastwestgateway
+  servers:
+    - port:
+        number: 15443
+        name: tls
+        protocol: TLS
+      tls:
+        mode: AUTO_PASSTHROUGH
+      hosts:
+        - "*.local"
+EOF
+`
+  echo "${GATEWAY}" | kubectl apply -n istio-system -f - > /dev/null
+  kubectl apply -f ${CACHE_DIR}/prometheus.yaml > /dev/null
+  kubectl apply -f ${CACHE_DIR}/kiali.yaml > /dev/null
+}
+
 function ::k8s(){
   local CLUSTER_ID=`::find_next_cluster_id`
   local MESH_ID=mesh1
@@ -642,6 +790,11 @@ function ::k8s_with_mounts(){
   local CLUSTER_ID=`::find_next_cluster_id`
   local MESH_ID=mesh1
   ::create_cluster_with_mounts ${CLUSTER_ID} ${API_SERVER_ADDR}
+}
+
+function ::standard_solarmesh(){
+  ::istio
+  ::install_solarmesh 1 "kubernetes-admin@kubernetes"
 }
 
 function ::solarmesh(){
@@ -666,6 +819,8 @@ function ::usage() {
   echo "  msd: Generate microservice demo manifests. One more argument is given as the number of services."
   echo "  k8s: Build a KindD cluster with Kubernetes installed"
   echo "  k8s-mount: Build a KindD k8s cluster with local storage volumes"
+  echo "  istio: Install istio on standard k8s cluster"
+  echo "  standard-solarmesh: Install solarmesh on standard k8s cluster"
 }
 
 function ::main() {
@@ -698,7 +853,15 @@ function ::main() {
       "solarmesh")
         ::prepare
         ::solarmesh
-        ;; 
+        ;;
+      "istio")
+        ::simple_prepare
+        ::istio
+        ;;
+      "standard-solarmesh")
+        ::simple_prepare
+        ::standard_solarmesh
+        ;;    
       *)
         ::usage
         ;;
