@@ -386,8 +386,7 @@ function ::multi_primary_sample() {
 function ::install_solarmesh(){
   local CLUSTER_ID=$1
   local CLUSTER_NAME=`::name $CLUSTER_ID`
-  local CLUSTER_CTX=`::context $CLUSTER_ID` 
-  local ISTIO_VERSION=``    
+  local CLUSTER_CTX=`::context $CLUSTER_ID`     
   
   if [ -n "$2" ] ;then
     CLUSTER_CTX=$2  
@@ -432,12 +431,14 @@ EOF
   echo  "Register"
   solarctl register --name ${CLUSTER_NAME}
   
+  echo "Installing grafana"
+  solarctl install grafana --name ${CLUSTER_NAME}
+
   echo "Installing bookinfo demo"
   kubectl create ns bookinfo || true
   solarctl install bookinfo -n bookinfo
-  
-  echo "Installing grafana"
-  solarctl install grafana --name ${CLUSTER_NAME}
+  kubectl label ns bookinfo "istio-injection=enabled" --overwrite
+  kubectl rollout restart deploy -n bookinfo	 
  
   echo "Installing wasm"
   ::wasm ${CLUSTER_CTX}
@@ -795,6 +796,30 @@ function ::k8s_with_mounts(){
 function ::standard_solarmesh(){
   ::istio
   ::install_solarmesh 1 "kubernetes-admin@kubernetes"
+
+  kubectl patch svc solar-controller -n service-mesh -p '{
+   "spec": {
+        "ports":  [{
+            "name": "http-8080",
+            "nodePort": 30880,
+            "port": 8080,
+            "protocol": "TCP",
+            "targetPort": 8080}],
+        "type": "NodePort"
+    }
+  }'
+
+  kubectl patch svc -n bookinfo productpage -p '{
+   "spec": {
+        "ports": [{
+            "name": "http",
+            "nodePort": 30201,
+            "port": 9080,
+            "protocol": "TCP",
+            "targetPort": 9080}],
+        "type": "NodePort"
+    }
+  }'
 }
 
 function ::solarmesh(){
