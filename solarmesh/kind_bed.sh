@@ -797,7 +797,7 @@ function ::standard_solarmesh(){
   ::istio
   ::install_solarmesh 1 "kubernetes-admin@kubernetes"
 
-  kubectl patch svc solar-controller -n service-mesh -p '{
+  kubectl --context="kubernetes-admin@kubernetes" patch svc solar-controller -n service-mesh -p '{
    "spec": {
         "ports":  [{
             "name": "http-8080",
@@ -809,7 +809,7 @@ function ::standard_solarmesh(){
     }
   }'
 
-  kubectl patch svc -n bookinfo productpage -p '{
+  kubectl --context="kubernetes-admin@kubernetes"  patch svc -n bookinfo productpage -p '{
    "spec": {
         "ports": [{
             "name": "http",
