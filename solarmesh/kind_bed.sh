@@ -445,7 +445,7 @@ EOF
   ::kubectlwait ${CLUSTER_CTX} service-mesh
   echo "Try to access SolarMesh through port forwarding. Such as: kubectl --context=${CLUSTER_CTX}  port-forward --address 0.0.0.0 service/solar-controller -n service-mesh 30880:8080"
   echo "Try to access Bookinfo through port forwarding. Such as: kubectl --context=${CLUSTER_CTX} port-forward --address 0.0.0.0 service/productpage -n bookinfo 9080:9080"
-  echo "Try to access Grafana through port forwarding. Such as: kubectl --context=${CLUSTER_CTX} port-forward --address 0.0.0.0 service/grafana -n solarmesh-monitoring 3000:3000"
+  echo "Try to access Grafana through port forwarding. Such as: kubectl --context=${CLUSTER_CTX} port-forward --address 0.0.0.0 service/grafana -n service-mesh 3000:3000"
   
 }
 
@@ -829,7 +829,7 @@ function ::solarmesh(){
   echo "The context for `::name ${CLUSTER_ID}` is `::context ${CLUSTER_ID}`."
   echo "Try to access SolarMesh through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/solar-controller -n service-mesh 30880:8080"
   echo "Try to access Bookinfo through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/productpage -n bookinfo 9080:9080"
-  echo "Try to access Grafana through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/grafana -n solarmesh-monitoring 3000:3000"
+  echo "Try to access Grafana through port forwarding. Such as: kubectl --context=`::context ${CLUSTER_ID}` port-forward --address 0.0.0.0 service/grafana -n service-mesh 3000:3000"
 }
 
 function ::usage() {
