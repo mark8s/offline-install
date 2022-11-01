@@ -21,6 +21,12 @@ function ::download() {
   popd > /dev/null
 }
 
+function ::clean(){
+  rm -rf ${CACHE_DIR}/istioctl-*
+  rm -rf ${CACHE_DIR}/io-*
+  rm -rf istioctl
+}
+
 function ::data_plane(){
   read -r -p "You are ready to update istio's data plane. Are You Sure? [y/n] " input
   case $input in
@@ -64,19 +70,38 @@ function ::control_plane() {
   ::download . https://ghproxy.com/https://github.com/istio/istio/releases/download/${REVISION}/istioctl-${REVISION}-linux-amd64.tar.gz  
   tar zxvf ${CACHE_DIR}/istioctl-${REVISION}-linux-amd64.tar.gz > /dev/null
   
-  kubectl get istiooperator -n istio-system installed-state -oyaml > ${CACHE_DIR}/io.yaml 
-  sed -i '/resourceVersion/d' ${CACHE_DIR}/io.yaml  
-  sed -i '/uid/d' ${CACHE_DIR}/io.yaml  
-  sed -i '/creationTimestamp/d' ${CACHE_DIR}/io.yaml
-  sed -i '/generation/d' ${CACHE_DIR}/io.yaml
-
-  echo "Ready to start upgrading istio control-plane. Your cluster's istiod and gateway will be updated."  
- 
-  ./istioctl install --set revision=${REVISION//./-} --set tag=${REVISION} -f ${CACHE_DIR}/io.yaml
-
-  echo "Prepare to uninstall the old istio control plane"
-  ./istioctl uninstall -f ${CACHE_DIR}/io.yaml
+  ::parse kubectl get istiooperator -o=custom-columns=:metadata.name -A  --no-headers 
+  
+  ::clean
 }
+
+function ::parse() {
+  local out=$($@)
+ 
+  for i in ${out} 
+  do
+    local ioName=$i 
+    kubectl get istiooperator ${ioName} -n istio-system -oyaml > ${CACHE_DIR}/io-old-${ioName}.yaml  
+    
+    cp ${CACHE_DIR}/io-old-${ioName}.yaml ${CACHE_DIR}/io-new-${ioName}.yaml  
+    sed -i '/resourceVersion/d' ${CACHE_DIR}/io-new-${ioName}.yaml  
+    sed -i '/uid/d' ${CACHE_DIR}/io-new-${ioName}.yaml
+    sed -i '/creationTimestamp/d' ${CACHE_DIR}/io-new-${ioName}.yaml
+    sed -i '/generation/d' ${CACHE_DIR}/io-new-${ioName}.yaml
+    local istiooperatorname="name: "${ioName}    
+    echo ${istiooperatorname}
+    sed -i "/$istiooperatorname/d" ${CACHE_DIR}/io-new-${ioName}.yaml
+     
+    ./istioctl install --set revision=${REVISION//./-} --set tag=${REVISION} -f ${CACHE_DIR}/io-new-${ioName}.yaml
+    
+    echo "Prepare to uninstall the old istiooperator: "${ioName}
+    sleep 1
+   ./istioctl uninstall -f ${CACHE_DIR}/io-old-${ioName}.yaml
+    kubectl delete -f ${CACHE_DIR}/io-old-${ioName}.yaml
+ 
+  done
+}
+
 
 function ::prepare() {
   command -v kubectl >/dev/null || (echo "Install kubectl from https://github.com/kubernetes/kubernetes/releases ." && exit 1)
