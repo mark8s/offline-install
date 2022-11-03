@@ -125,7 +125,8 @@ function ::parse() {
     echo ${istiooperatorname}
     sed -i "/$istiooperatorname/d" ${CACHE_DIR}/io-new-${ioName}.yaml
      
-    ./istioctl install --set revision=${REVISION//./-} --set tag=${REVISION} -f ${CACHE_DIR}/io-new-${ioName}.yaml
+    # ./istioctl install --set revision=${REVISION//./-} --set tag=${REVISION} -f ${CACHE_DIR}/io-new-${ioName}.yaml
+    ./istioctl install --set revision=${REVISION//./-} --set tag=${REVISION} --set components.ingressGateways[name:istio-ingressgateway].enabled=false -f ${CACHE_DIR}/io-new-${ioName}.yaml
   done
 }
 

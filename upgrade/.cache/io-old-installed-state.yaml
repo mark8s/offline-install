@@ -1,0 +1,245 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  annotations:
+    install.istio.io/ignoreReconcile: "true"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"install.istio.io/v1alpha1","kind":"IstioOperator","metadata":{"annotations":{"install.istio.io/ignoreReconcile":"true"},"creationTimestamp":null,"name":"installed-state","namespace":"istio-system"},"spec":{"components":{"base":{"enabled":true},"cni":{"enabled":false},"egressGateways":[{"enabled":false,"name":"istio-egressgateway"}],"ingressGateways":[{"enabled":true,"k8s":{"service":{"ports":[{"name":"promethues","port":9090,"protocol":"TCP","targetPort":9090},{"name":"kiali","port":20001,"protocol":"TCP","targetPort":20001},{"name":"networking-agent","port":7575,"protocol":"TCP","targetPort":7575},{"name":"bookinfo","port":9080,"protocol":"TCP","targetPort":9080},{"name":"grafana","port":3000,"protocol":"TCP","targetPort":3000},{"name":"jaeger","port":16686,"protocol":"TCP","targetPort":16686},{"name":"status-port","port":15021,"protocol":"TCP","targetPort":15021},{"name":"http2","port":80,"protocol":"TCP","targetPort":8080},{"name":"https","port":443,"protocol":"TCP","targetPort":8443},{"name":"tcp","port":31400,"protocol":"TCP","targetPort":31400},{"name":"tls","port":15443,"protocol":"TCP","targetPort":15443}]}},"name":"istio-ingressgateway"},{"enabled":true,"k8s":{"env":[{"name":"ISTIO_META_REQUESTED_NETWORK_VIEW","value":"network1"}],"service":{"ports":[{"name":"status-port","port":15021,"targetPort":15021},{"name":"tls","port":15443,"targetPort":15443},{"name":"tls-istiod","port":15012,"targetPort":15012},{"name":"tls-webhook","port":15017,"targetPort":15017}]}},"label":{"app":"istio-eastwestgateway","istio":"eastwestgateway","topology.istio.io/network":"network1"},"name":"istio-eastwestgateway"}],"istiodRemote":{"enabled":false},"pilot":{"enabled":true}},"hub":"docker.io/istio","meshConfig":{"defaultConfig":{"proxyMetadata":{}},"enablePrometheusMerge":true},"profile":"default","tag":"1.15.0","values":{"base":{"enableCRDTemplates":false,"validationURL":""},"defaultRevision":"","gateways":{"istio-egressgateway":{"autoscaleEnabled":true,"env":{},"name":"istio-egressgateway","secretVolumes":[{"mountPath":"/etc/istio/egressgateway-certs","name":"egressgateway-certs","secretName":"istio-egressgateway-certs"},{"mountPath":"/etc/istio/egressgateway-ca-certs","name":"egressgateway-ca-certs","secretName":"istio-egressgateway-ca-certs"}],"type":"ClusterIP"},"istio-ingressgateway":{"autoscaleEnabled":true,"env":{},"injectionTemplate":"gateway","name":"istio-ingressgateway","secretVolumes":[{"mountPath":"/etc/istio/ingressgateway-certs","name":"ingressgateway-certs","secretName":"istio-ingressgateway-certs"},{"mountPath":"/etc/istio/ingressgateway-ca-certs","name":"ingressgateway-ca-certs","secretName":"istio-ingressgateway-ca-certs"}],"type":"LoadBalancer"}},"global":{"configValidation":true,"defaultNodeSelector":{},"defaultPodDisruptionBudget":{"enabled":true},"defaultResources":{"requests":{"cpu":"10m"}},"imagePullPolicy":"","imagePullSecrets":[],"istioNamespace":"istio-system","istiod":{"enableAnalysis":false},"jwtPolicy":"third-party-jwt","logAsJson":false,"logging":{"level":"default:info"},"meshID":"mesh1","meshNetworks":{},"mountMtlsCerts":false,"multiCluster":{"clusterName":"cluster1","enabled":false},"network":"network1","omitSidecarInjectorConfigMap":false,"oneNamespace":false,"operatorManageWebhooks":false,"pilotCertProvider":"istiod","priorityClassName":"","proxy":{"autoInject":"enabled","clusterDomain":"cluster.local","componentLogLevel":"misc:error","enableCoreDump":false,"excludeIPRanges":"","excludeInboundPorts":"","excludeOutboundPorts":"","image":"proxyv2","includeIPRanges":"*","logLevel":"warning","privileged":false,"readinessFailureThreshold":30,"readinessInitialDelaySeconds":1,"readinessPeriodSeconds":2,"resources":{"limits":{"cpu":"2000m","memory":"1024Mi"},"requests":{"cpu":"100m","memory":"128Mi"}},"statusPort":15020,"tracer":"zipkin"},"proxy_init":{"image":"proxyv2","resources":{"limits":{"cpu":"2000m","memory":"1024Mi"},"requests":{"cpu":"10m","memory":"10Mi"}}},"sds":{"token":{"aud":"istio-ca"}},"sts":{"servicePort":0},"tracer":{"datadog":{},"lightstep":{},"stackdriver":{},"zipkin":{}},"useMCP":false},"istiodRemote":{"injectionURL":""},"pilot":{"autoscaleEnabled":true,"autoscaleMax":5,"autoscaleMin":1,"configMap":true,"cpu":{"targetAverageUtilization":80},"deploymentLabels":null,"enableProtocolSniffingForInbound":true,"enableProtocolSniffingForOutbound":true,"env":{},"image":"pilot","keepaliveMaxServerConnectionAge":"30m","nodeSelector":{},"podLabels":{},"replicaCount":1,"traceSampling":1},"telemetry":{"enabled":true,"v2":{"enabled":true,"metadataExchange":{"wasmEnabled":false},"prometheus":{"enabled":true,"wasmEnabled":false},"stackdriver":{"configOverride":{},"enabled":false,"logging":false,"monitoring":false,"topology":false}}}}}}
+  creationTimestamp: "2022-11-03T09:42:05Z"
+  generation: 1
+  name: installed-state
+  namespace: istio-system
+  resourceVersion: "918"
+  uid: b4638173-dc5f-4983-aac2-f738505a5feb
+spec:
+  components:
+    base:
+      enabled: true
+    cni:
+      enabled: false
+    egressGateways:
+    - enabled: false
+      name: istio-egressgateway
+    ingressGateways:
+    - enabled: true
+      k8s:
+        service:
+          ports:
+          - name: promethues
+            port: 9090
+            protocol: TCP
+            targetPort: 9090
+          - name: kiali
+            port: 20001
+            protocol: TCP
+            targetPort: 20001
+          - name: networking-agent
+            port: 7575
+            protocol: TCP
+            targetPort: 7575
+          - name: bookinfo
+            port: 9080
+            protocol: TCP
+            targetPort: 9080
+          - name: grafana
+            port: 3000
+            protocol: TCP
+            targetPort: 3000
+          - name: jaeger
+            port: 16686
+            protocol: TCP
+            targetPort: 16686
+          - name: status-port
+            port: 15021
+            protocol: TCP
+            targetPort: 15021
+          - name: http2
+            port: 80
+            protocol: TCP
+            targetPort: 8080
+          - name: https
+            port: 443
+            protocol: TCP
+            targetPort: 8443
+          - name: tcp
+            port: 31400
+            protocol: TCP
+            targetPort: 31400
+          - name: tls
+            port: 15443
+            protocol: TCP
+            targetPort: 15443
+      name: istio-ingressgateway
+    - enabled: true
+      k8s:
+        env:
+        - name: ISTIO_META_REQUESTED_NETWORK_VIEW
+          value: network1
+        service:
+          ports:
+          - name: status-port
+            port: 15021
+            targetPort: 15021
+          - name: tls
+            port: 15443
+            targetPort: 15443
+          - name: tls-istiod
+            port: 15012
+            targetPort: 15012
+          - name: tls-webhook
+            port: 15017
+            targetPort: 15017
+      label:
+        app: istio-eastwestgateway
+        istio: eastwestgateway
+        topology.istio.io/network: network1
+      name: istio-eastwestgateway
+    istiodRemote:
+      enabled: false
+    pilot:
+      enabled: true
+  hub: docker.io/istio
+  meshConfig:
+    defaultConfig:
+      proxyMetadata: {}
+    enablePrometheusMerge: true
+  profile: default
+  tag: 1.15.0
+  values:
+    base:
+      enableCRDTemplates: false
+      validationURL: ""
+    defaultRevision: ""
+    gateways:
+      istio-egressgateway:
+        autoscaleEnabled: true
+        env: {}
+        name: istio-egressgateway
+        secretVolumes:
+        - mountPath: /etc/istio/egressgateway-certs
+          name: egressgateway-certs
+          secretName: istio-egressgateway-certs
+        - mountPath: /etc/istio/egressgateway-ca-certs
+          name: egressgateway-ca-certs
+          secretName: istio-egressgateway-ca-certs
+        type: ClusterIP
+      istio-ingressgateway:
+        autoscaleEnabled: true
+        env: {}
+        injectionTemplate: gateway
+        name: istio-ingressgateway
+        secretVolumes:
+        - mountPath: /etc/istio/ingressgateway-certs
+          name: ingressgateway-certs
+          secretName: istio-ingressgateway-certs
+        - mountPath: /etc/istio/ingressgateway-ca-certs
+          name: ingressgateway-ca-certs
+          secretName: istio-ingressgateway-ca-certs
+        type: LoadBalancer
+    global:
+      configValidation: true
+      defaultNodeSelector: {}
+      defaultPodDisruptionBudget:
+        enabled: true
+      defaultResources:
+        requests:
+          cpu: 10m
+      imagePullPolicy: ""
+      imagePullSecrets: []
+      istioNamespace: istio-system
+      istiod:
+        enableAnalysis: false
+      jwtPolicy: third-party-jwt
+      logAsJson: false
+      logging:
+        level: default:info
+      meshID: mesh1
+      meshNetworks: {}
+      mountMtlsCerts: false
+      multiCluster:
+        clusterName: cluster1
+        enabled: false
+      network: network1
+      omitSidecarInjectorConfigMap: false
+      oneNamespace: false
+      operatorManageWebhooks: false
+      pilotCertProvider: istiod
+      priorityClassName: ""
+      proxy:
+        autoInject: enabled
+        clusterDomain: cluster.local
+        componentLogLevel: misc:error
+        enableCoreDump: false
+        excludeIPRanges: ""
+        excludeInboundPorts: ""
+        excludeOutboundPorts: ""
+        image: proxyv2
+        includeIPRanges: '*'
+        logLevel: warning
+        privileged: false
+        readinessFailureThreshold: 30
+        readinessInitialDelaySeconds: 1
+        readinessPeriodSeconds: 2
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 1024Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        statusPort: 15020
+        tracer: zipkin
+      proxy_init:
+        image: proxyv2
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 1024Mi
+          requests:
+            cpu: 10m
+            memory: 10Mi
+      sds:
+        token:
+          aud: istio-ca
+      sts:
+        servicePort: 0
+      tracer:
+        datadog: {}
+        lightstep: {}
+        stackdriver: {}
+        zipkin: {}
+      useMCP: false
+    istiodRemote:
+      injectionURL: ""
+    pilot:
+      autoscaleEnabled: true
+      autoscaleMax: 5
+      autoscaleMin: 1
+      configMap: true
+      cpu:
+        targetAverageUtilization: 80
+      deploymentLabels: null
+      enableProtocolSniffingForInbound: true
+      enableProtocolSniffingForOutbound: true
+      env: {}
+      image: pilot
+      keepaliveMaxServerConnectionAge: 30m
+      nodeSelector: {}
+      podLabels: {}
+      replicaCount: 1
+      traceSampling: 1
+    telemetry:
+      enabled: true
+      v2:
+        enabled: true
+        metadataExchange:
+          wasmEnabled: false
+        prometheus:
+          enabled: true
+          wasmEnabled: false
+        stackdriver:
+          configOverride: {}
+          enabled: false
+          logging: false
+          monitoring: false
+          topology: false
