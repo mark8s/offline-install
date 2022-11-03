@@ -47,6 +47,7 @@ spec:
     metadata:
       labels:
         app: sleep
+       # sidecar.istio.io/inject: "true"
     spec:
       terminationGracePeriodSeconds: 0
       serviceAccountName: sleep
