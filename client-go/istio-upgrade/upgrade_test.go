@@ -1,4 +1,4 @@
-package istio_upgrade
+package test
 
 import (
 	"context"
@@ -41,23 +41,40 @@ func TestUpgradeGw(t *testing.T) {
 
 	list, err := clientset.AppsV1().Deployments("istio-system").List(context.TODO(), metav1.ListOptions{LabelSelector: "istio=ingressgateway"})
 	if err != nil {
-		return
+		log.Error(err)
+	} else {
+		for _, gw := range list.Items {
+			labels := gw.Spec.Template.Labels
+			labels["istio.io/rev"] = "1-15-1"
+			gw.Spec.Template.Labels = labels
+
+			update, err := clientset.AppsV1().Deployments("istio-system").Update(context.TODO(), &gw, metav1.UpdateOptions{})
+			if err != nil {
+				log.Error("%s upgrade istio-ingressgateway failed： %v", update.Name, err)
+			}
+		}
 	}
 
-	for _, gw := range list.Items {
-		labels := gw.Spec.Template.Labels
-		labels["istio.io/rev"] = "1-15-1"
-		gw.Spec.Template.Labels = labels
+	list, err = clientset.AppsV1().Deployments("istio-system").List(context.TODO(), metav1.ListOptions{LabelSelector: "istio=egressgateway"})
+	if err != nil {
+		log.Error(err)
+	} else {
+		for _, gw := range list.Items {
+			labels := gw.Spec.Template.Labels
+			labels["istio.io/rev"] = "1-15-1"
+			gw.Spec.Template.Labels = labels
 
-		update, err := clientset.AppsV1().Deployments("istio-system").Update(context.TODO(), &gw, metav1.UpdateOptions{})
-		if err != nil {
-			log.Error("%s upgrade failed： %v", update.Name, err)
+			update, err := clientset.AppsV1().Deployments("istio-system").Update(context.TODO(), &gw, metav1.UpdateOptions{})
+			if err != nil {
+				log.Error("%s upgrade istio-egressgateway failed： %v", update.Name, err)
+			}
 		}
 	}
 }
 
+// go test -v -run TestUninstall upgrade_test.go
 func TestUninstall(t *testing.T) {
-	cmd := exec.Command("./istioctl", "uninstall", "--revision", "1-15-1", "-y")
+	cmd := exec.Command("./istioctl", "uninstall", "--revision", "1-15-1", "--kubeconfig", "kconf.yml", "-y")
 	commandOutPut(cmd)
 }
 

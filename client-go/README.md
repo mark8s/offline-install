@@ -1,6 +1,5 @@
 # client-go 日常记录
 
-
 #### 获取 自定义CRD
 使用 dynamicClient
 ```go
@@ -76,6 +75,6 @@ metadata:
 ...
 ```
 
-
+####
 
 
