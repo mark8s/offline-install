@@ -9,13 +9,13 @@ IP=$(ip a | grep -v kube | grep -v 127.0.0.1 | grep -v docker | grep -v 'br\-' |
 
 function ::docker(){
   echo "Ready to install docker ..."
-  sudo yum update -y
-  sudo yum install -y yum-utils  
-  sudo yum install -y device-mapper-persistent-data
-  sudo yum install -y  lvm2	
-  sudo yum install -y yum-utils device-mapper-persistent-data lvm2  
+  sudo yum update -y >dev/null
+  sudo yum install -y yum-utils >dev/null  
+  sudo yum install -y device-mapper-persistent-data >dev/null
+  sudo yum install -y  lvm2 >dev/null	
+  sudo yum install -y yum-utils device-mapper-persistent-data lvm2  >dev/null
   yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
-  sudo yum install -y docker-ce
+  sudo yum install -y docker-ce 
   mkdir /etc/docker || true
   touch /etc/docker/daemon.json
   echo "{ \"registry-mirrors\":[\"https://u6gcz43x.mirror.aliyuncs.com\"] }" > /etc/docker/daemon.json
@@ -277,8 +277,8 @@ echo "bookinfo访问地址: http://${IP}:30205/productpage"
 }
 
 function ::install_nginx(){
-  sudo yum install -y epel-release
-  sudo yum install -y nginx  
+  sudo yum install -y epel-release >dev/null
+  sudo yum install -y nginx >dev/null 
   systemctl enable nginx
   systemctl start nginx 
 }
@@ -469,7 +469,7 @@ function ::prepare() {
 
   if ! command -v solarctl > /dev/null; then
     echo "Ready to install solarctl ..."
-    ::download . http://release.solarmesh.cn/solar/v1.11/solar-${SOLARR_TAG}-linux-amd64.tar.gz
+    ::download . http://release.solarmesh.cn/solar/v1.11/solar-${SOLAR_TAG}-linux-amd64.tar.gz
     tar -xvf ${CACHE_DIR}/solar-${SOLAR_TAG}-linux-amd64.tar.gz -C ${CACHE_DIR}/  > /dev/null
     mv ${CACHE_DIR}/solar/bin/solarctl /usr/local/bin/solarctl
   fi
