@@ -17,10 +17,9 @@ spec:
         app: elasticsearch
         version: v1
     spec:
-      terminationGracePeriodSeconds: 10
       containers:
         - name: elasticsearch
-          image: elasticsearch:7.9.2
+          image: registry.cn-shenzhen.aliyuncs.com/solarmesh/elasticsearch:7.9.2
           ports:
             - containerPort: 9200
               name: http-9200
