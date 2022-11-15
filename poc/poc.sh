@@ -8,7 +8,7 @@ SOLAR_TAG="v1.11.3"
 IP=$(ip a | grep -v kube | grep -v 127.0.0.1 | grep -v docker | grep -v 'br\-' | grep inet | grep -v inet6 | grep -v lo:0 | sed 's/\//\ /g' | awk '{print $2}')
 
 function ::docker(){
-  echo "Ready to install docker ..."
+  echo "Ready to install docker. Wait a moment ..."
   sudo yum update -y >dev/null
   sudo yum install -y yum-utils >dev/null  
   sudo yum install -y device-mapper-persistent-data >dev/null
@@ -26,7 +26,7 @@ function ::docker(){
 }
 
 function ::install_istio(){
-  echo "Ready to install istio ..."
+  echo "Ready to install istio. Wait a moment ..."
 
   istioctl operator init --hub ${HUB} --tag ${ISTIO_TAG}
   
@@ -117,7 +117,7 @@ EOF
 }
 
 function ::install_solarmesh(){
-  echo "Ready to install solarmesh ..."
+  echo "Ready to install solarmesh. Wait a moment ..."
   
   local LAST_CLUSTER=`kind get clusters | grep cluster | tail -1`
   local CLUSTER_CTX="kind-"${LAST_CLUSTER}
@@ -148,12 +148,12 @@ EOF
 `
   echo "${SOLAR_CONF}" | kubectl apply --wait -f - >/dev/null 
   
-  echo  "Ready to register cluster1 ..."
+  echo  "Ready to register cluster. Wait a moment ..."
   solarctl register --name cluster1
   
   solarctl install grafana --name cluster1
   
-  echo "Ready to install bookinfo ..."
+  echo "Ready to install bookinfo. Wait a moment ..."
   kubectl create ns bookinfo || true
   kubectl label ns bookinfo "istio.io/rev=default" --overwrite
   solarctl install bookinfo -n bookinfo >/dev/null
@@ -290,7 +290,7 @@ function ::solarmesh(){
 }
 
 function ::install_k8s(){
- echo "Ready to install k8s ..." 
+ echo "Ready to install k8s. Wait a moment ..." 
  local CLUSTER_CONF=`cat <<EOF
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -449,33 +449,33 @@ function ::prepare() {
   fi
   
   if ! command -v kind > /dev/null; then
-    echo "Ready to install kind ..." 
+    echo "Ready to install kind. Wait a moment ..." 
     ::download . https://ghproxy.com/https://github.com/kubernetes-sigs/kind/releases/download/v0.17.0/kind-linux-amd64 
     sudo mv ${CACHE_DIR}/kind-linux-amd64 /usr/local/bin/kind
   fi
 
   if ! command -v kubectl > /dev/null; then
-    echo "Ready to install kubectl ..."
+    echo "Ready to install kubectl. Wait a moment ..."
     ::download . https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl 
     sudo mv ${CACHE_DIR}/kubectl /usr/local/bin/kubectl
   fi
 
   if ! command -v istioctl > /dev/null; then
-    echo "Ready to install istioctl ..."
+    echo "Ready to install istioctl. Wait a moment ..."
     ::download . http://release.solarmesh.cn/istio/istioctl/istioctl-1.11.5.tar.gz
     tar zxvf ${CACHE_DIR}/istioctl-1.11.5.tar.gz > /dev/null
     mv istioctl /usr/local/bin/istioctl
   fi
 
   if ! command -v solarctl > /dev/null; then
-    echo "Ready to install solarctl ..."
+    echo "Ready to install solarctl. Wait a moment ..."
     ::download . http://release.solarmesh.cn/solar/v1.11/solar-${SOLAR_TAG}-linux-amd64.tar.gz
     tar -xvf ${CACHE_DIR}/solar-${SOLAR_TAG}-linux-amd64.tar.gz -C ${CACHE_DIR}/  > /dev/null
     mv ${CACHE_DIR}/solar/bin/solarctl /usr/local/bin/solarctl
   fi
  
   if ! command -v nginx > /dev/null; then
-    echo "Ready to install nginx ..."
+    echo "Ready to install nginx. Wait a moment ..."
     ::install_nginx
   fi
   
