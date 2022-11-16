@@ -39,7 +39,7 @@ metadata:
 spec:
   hub: ${HUB}
   tag: ${ISTIO_TAG}
-  profile: demo
+  profile: default
   meshConfig:
     accessLogFile: /dev/stdout
     enableTracing: true
@@ -53,7 +53,15 @@ spec:
       multiCluster:
         clusterName: cluster1
       network: network1
+    gateways:
+      istio-ingressgateway:
+        injectionTemplate: gateway
+      istio-egressgateway:
+        injectionTemplate: gateway  
   components:
+    egressGateways:
+      - name: istio-egressgateway
+        enabled: true
     ingressGateways:
       - name: istio-ingressgateway
         enabled: true
