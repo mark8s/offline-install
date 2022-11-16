@@ -244,6 +244,8 @@ EOF
   kubectl create ns es | true
   kubectl apply -f ${CACHE_DIR}/es.yaml -n es  --validate=false > /dev/null    
 
+  kubectl apply -f ${CACHE_DIR}/metrics-server.yaml -n es  --validate=false > /dev/null  
+
   kubectl patch svc -n bookinfo productpage -p '{
    "spec": {
         "ports": [{
@@ -489,7 +491,8 @@ function ::prepare() {
   
   ::download . http://release.solarmesh.cn/istio/addon/prometheus.yaml
   ::download . http://release.solarmesh.cn/istio/addon/es.yaml
-  ::download . http://release.solarmesh.cn/istio/addon/kiali.yaml  
+  ::download . http://release.solarmesh.cn/istio/addon/kiali.yaml 
+  ::download . http://release.solarmesh.cn/istio/addon/metrics-server.yaml 
 
   systemctl stop firewalld || true
 }
