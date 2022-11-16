@@ -53,6 +53,9 @@ spec:
       multiCluster:
         clusterName: cluster1
       network: network1
+      tracer:
+        zipkin:
+          address: jaeger.jaeger-infra:9411
     gateways:
       istio-ingressgateway:
         injectionTemplate: gateway
@@ -160,6 +163,7 @@ EOF
   solarctl register --name cluster1
   
   solarctl install grafana --name cluster1
+  solarctl install jaeger --name cluster1  
   
   echo "Ready to install bookinfo. Wait a moment ..."
   kubectl create ns bookinfo || true
@@ -244,7 +248,7 @@ EOF
   kubectl create ns es | true
   kubectl apply -f ${CACHE_DIR}/es.yaml -n es  --validate=false > /dev/null    
 
-  kubectl apply -f ${CACHE_DIR}/metrics-server.yaml -n es  --validate=false > /dev/null  
+  kubectl apply -f ${CACHE_DIR}/metrics-server.yaml --validate=false > /dev/null  
 
   kubectl patch svc -n bookinfo productpage -p '{
    "spec": {
