@@ -1,16 +1,18 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: create-new-envoy-metric
+  name: create-new-envoy-metric-on-ratings
   namespace: bookinfo
 spec:
   workloadSelector:
     labels:
-      app: productpage
+      app: ratings
+      version: v1
   configPatches:
+  ## Sidecar Outbound 
   - applyTo: HTTP_FILTER
     match:
-      context: SIDECAR_OUTBOUND
+      context: SIDECAR_INBOUND
       listener:
         filterChain:
           filter:
@@ -42,10 +44,10 @@ spec:
                       }
                     ]
                   }
-              root_id: stats_outbound
+              root_id: stats_inbound
               vm_config:
                 code:
                   local:
                     inline_string: envoy.wasm.stats
                 runtime: envoy.wasm.runtime.null
-                vm_id: stats_outbound
+                vm_id: stats_inbound
