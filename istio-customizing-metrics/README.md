@@ -1,5 +1,187 @@
 # Customizing Istio Metrics
 
+
+## Create metrics and dim by IstioOperator
+
+```yaml
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: demo
+  namespace: istio-system
+spec:
+  profile: default
+  meshConfig:
+    accessLogFile: /dev/stdout
+    enableTracing: true
+    defaultConfig:
+      proxyMetadata:
+        ISTIO_META_DNS_CAPTURE: "true"
+        ISTIO_META_DNS_AUTO_ALLOCATE: "true"
+      proxyStatsMatcher:
+        inclusionPrefixes:
+          - solarmesh
+      extraStatTags:
+        - istio_version  
+  values:
+    global:
+      meshID: mesh1
+      multiCluster:
+        clusterName: cluster1
+      network: network1
+      tracer:
+        zipkin:
+          address: jaeger.jaeger-infra:9411
+    telemetry:
+      enabled: true
+      v2:
+        enabled: true
+        prometheus:
+          configOverride:
+            inboundSidecar:
+              definitions:
+                - name: solarmesh_requests_total
+                  type: "COUNTER"
+                  value: "1"
+              metrics:
+                - name: solarmesh_requests_total
+                  dimensions:
+                    istio_version: downstream_peer.istio_version
+            outboundSidecar:
+              definitions:
+                - name: solarmesh_requests_total
+                  type: "COUNTER"
+                  value: "1"
+              metrics:
+                - name: solarmesh_requests_total
+                  dimensions:
+                    istio_version: upstream_peer.istio_version
+```
+
+prometheus:
+
+```shell
+istio_solarmesh_requests_total{app="reviews", instance="10.244.0.27:15020", istio_version="1.12.9", job="kubernetes-pods", kubernetes_namespace="bookinfo", kubernetes_pod_name="reviews-v3-665945dd6f-62d9c", pod_template_hash="665945dd6f", security_istio_io_tlsMode="istio", service_istio_io_canonical_name="reviews", service_istio_io_canonical_revision="v3", topology_istio_io_network="network1", version="v3"}
+```
+
+貌似这种方式添加指标和维度，只支持 istio 1.12 及以上。当使用 istio 1.11 的时候，只会创建metrcis，但是metrics中自定义的维度dimensions无法创建成功。
+
+reference: https://github.com/istio/istio/issues/42145
+
+## Create metrics by EnvoyFilter
+
+```
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: solarmesh-request-total
+  namespace: istio-system
+  labels:
+    istio.io/rev: default
+spec:
+  priority: -1
+  configPatches:
+  ## Sidecar Inbound 
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_OUTBOUND
+      listener:
+        filterChain:
+          filter:
+            name: envoy.filters.network.http_connection_manager
+            subFilter:
+              name: envoy.filters.http.router
+      proxy:
+        proxyVersion: ^1\.11.*
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: istio.stats
+        typed_config:
+          '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+          type_url: type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+          value:
+            config:
+              configuration:
+                '@type': type.googleapis.com/google.protobuf.StringValue
+                value: |
+                  {
+                    "debug": "false",
+                    "stat_prefix": "istio",
+                    "definitions": [
+                      {
+                        "name": "solarmesh_requests_total",
+                        "type": "COUNTER",
+                        "value": "1"                      
+                      }
+                    ],
+                    "metrics": [
+                      { 
+                        "name": "solarmesh_requests_total",
+                        "dimensions": {
+                          "istio_version": "upstream_peer.istio_version"
+                        }
+                      }                    
+                    ]
+                  }
+              root_id: stats_outbound
+              vm_config:
+                code:
+                  local:
+                    inline_string: envoy.wasm.stats
+                runtime: envoy.wasm.runtime.null
+                vm_id: stats_outbound
+```
+istio configmap:
+
+```
+apiVersion: v1
+data:
+  mesh: |-
+    defaultConfig:
+      discoveryAddress: istiod.istio-system.svc:15012
+      proxyMetadata: {}
+      tracing:
+        zipkin:
+          address: zipkin.istio-system:9411
+      proxyStatsMatcher:
+        inclusionPrefixes:
+          - solarmesh
+      extraStatTags:
+        - istio_version
+    enablePrometheusMerge: true
+    rootNamespace: istio-system
+    trustDomain: cluster.local
+  meshNetworks: 'networks: {}'
+kind: ConfigMap
+metadata:
+  labels:
+    install.operator.istio.io/owning-resource: unknown
+    install.operator.istio.io/owning-resource-namespace: istio-system
+    istio.io/rev: default
+    operator.istio.io/component: Pilot
+    operator.istio.io/managed: Reconcile
+    operator.istio.io/version: 1.12.9
+    release: istio
+  name: istio
+  namespace: istio-system
+```
+
+
+实践： istio 1.12 方可用
+
+prometheus:
+
+```yaml
+istio_solarmesh_requests_total{app="productpage", instance="10.244.0.25:15020", istio_version="1.12.9", job="kubernetes-pods", kubernetes_namespace="bookinfo", kubernetes_pod_name="productpage-v1-df566bb97-qs7hb", pod_template_hash="df566bb97", security_istio_io_tlsMode="istio", service_istio_io_canonical_name="productpage", service_istio_io_canonical_revision="v1", version="v1"}
+54
+istio_solarmesh_requests_total{app="productpage", instance="10.244.0.25:15020", istio_version="unknown", job="kubernetes-pods", kubernetes_namespace="bookinfo", kubernetes_pod_name="productpage-v1-df566bb97-qs7hb", pod_template_hash="df566bb97", security_istio_io_tlsMode="istio", service_istio_io_canonical_name="productpage", service_istio_io_canonical_revision="v1", version="v1"}
+3
+istio_solarmesh_requests_total{app="reviews", instance="10.244.0.22:15020", istio_version="1.12.9", job="kubernetes-pods", kubernetes_namespace="bookinfo", kubernetes_pod_name="reviews-v2-6d578b5495-sjlgl", pod_template_hash="6d578b5495", security_istio_io_tlsMode="istio", service_istio_io_canonical_name="reviews", service_istio_io_canonical_revision="v2", version="v2"}
+17
+istio_solarmesh_requests_total{app="reviews", instance="10.244.0.27:15020", istio_version="1.12.9", job="kubernetes-pods", kubernetes_namespace="bookinfo", kubernetes_pod_name="reviews-v3-6d56c97485-24tr7", pod_template_hash="6d56c97485", security_istio_io_tlsMode="istio", service_istio_io_canonical_name="reviews", service_istio_io_canonical_revision="v3", version="v3"}
+```
+
 ## Create new metrics 
 
 enovyfilter:
