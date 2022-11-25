@@ -1,7 +1,6 @@
 # Customizing Istio Metrics
 
-
-## Modify the original index and increase the dimension
+## Create new metrics 
 
 enovyfilter:
 ```yaml
@@ -82,7 +81,7 @@ $ kubectl exec -it -n bookinfo deploy/ratings-v1 -c istio-proxy -- curl localhos
 istio_solarmesh_metric{} 92
 ```
 
-## Create new metrics 
+## Modify the original index and increase the dimension
 
 envoyfilter:
 
