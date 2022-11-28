@@ -4,7 +4,7 @@ CACHE_DIR=".cache"
 CLUSTER_NAME_PREFIX="cluster"
 HUB="registry.cn-shenzhen.aliyuncs.com/solarmesh"
 ISTIO_TAG="1.11.5"
-SOLAR_TAG="v1.11.3"
+SOLAR_TAG="v1.11.4"
 IP=$(ip a | grep -v kube | grep -v 127.0.0.1 | grep -v docker | grep -v 'br\-' | grep inet | grep -v inet6 | grep -v lo:0 | sed 's/\//\ /g' | awk '{print $2}')
 
 function ::docker(){
@@ -46,7 +46,10 @@ spec:
     defaultConfig:
       proxyMetadata:
         ISTIO_META_DNS_CAPTURE: "true"
-        ISTIO_META_DNS_AUTO_ALLOCATE: "true"  
+        ISTIO_META_DNS_AUTO_ALLOCATE: "true" 
+      extraStatTags:
+        - request_path
+        - request_method 
   values:
     global:
       meshID: mesh1
@@ -258,6 +261,18 @@ EOF
             "port": 9080,
             "protocol": "TCP",
             "targetPort": 9080}],
+        "type": "NodePort"
+    }
+  }'
+
+  kubectl patch svc -n istio-system prometheus -p '{
+   "spec": {
+        "ports": [{
+            "name": "http",
+            "nodePort": 30203,
+            "port": 9090,
+            "protocol": "TCP",
+            "targetPort": 9090}],
         "type": "NodePort"
     }
   }' 
@@ -519,7 +534,7 @@ function ::main() {
         ;; 
       "solarmesh")
         ::prepare
-        ::solarmesh
+        ::solarmesh 
         ;;
       *)
         ::usage
