@@ -137,16 +137,18 @@ function ::install_solarmesh(){
   local CLUSTER_CTX="kind-"${LAST_CLUSTER}
   
   kubectl config use-context ${CLUSTER_CTX}
-  solarctl install solar-mesh >/dev/null
+  solarctl install solar-mesh
 
-  ::kubectlwait ${CLUSTER_CTX} service-mesh
   ::kubectlwait ${CLUSTER_CTX} solar-operator
-  
+  ::kubectlwait ${CLUSTER_CTX} service-mesh
+   
   kubectl create secret generic admin --from-literal=username=admin --from-literal=password=admin -n service-mesh
   kubectl label secret admin app=solar-controller -n service-mesh  
 
   export ISTIOD_REMOTE_EP=$(kubectl get nodes|awk '{print $1}' |awk 'NR==2'|xargs -n 1 kubectl get nodes  -o jsonpath='{.status.addresses[0].address}')
-  solarctl operator init --external-ip $ISTIOD_REMOTE_EP --eastwest-external-ip $ISTIOD_REMOTE_EP  >/dev/null
+  solarctl operator init --external-ip $ISTIOD_REMOTE_EP --eastwest-external-ip $ISTIOD_REMOTE_EP
+  
+  ::kubectlwait ${CLUSTER_CTX} solar-operator
   kubectl create ns service-mesh || true
 
   local SOLAR_CONF=`cat <<EOF
@@ -160,12 +162,12 @@ spec:
   profile: default
 EOF
 `
-  echo "${SOLAR_CONF}" | kubectl apply --wait -f - >/dev/null 
+  echo "${SOLAR_CONF}" | kubectl apply --wait -f -
   
   echo  "Ready to register cluster. Wait a moment ..."
   solarctl register --name cluster1
   
-  solarctl install grafana --name cluster1
+  solarctl install grafana --name cluster1 --extra-metric=true --istio-version "1.11"
   solarctl install jaeger --name cluster1  
   
   echo "Ready to install bookinfo. Wait a moment ..."
@@ -249,7 +251,7 @@ EOF
   echo "${WASM_CONF}" | kubectl apply -f - >/dev/null 
      
   kubectl create ns es | true
-  kubectl apply -f ${CACHE_DIR}/es.yaml -n es  --validate=false > /dev/null    
+  kubectl apply -f ${CACHE_DIR}/es.yaml -n es  --validate=false   
 
   kubectl apply -f ${CACHE_DIR}/metrics-server.yaml --validate=false > /dev/null  
 
