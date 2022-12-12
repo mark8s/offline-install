@@ -39,7 +39,7 @@ metadata:
 spec:
   hub: ${HUB}
   tag: ${ISTIO_TAG}
-  profile: default
+  profile: demo
   meshConfig:
     accessLogFile: /dev/stdout
     enableTracing: true
@@ -58,16 +58,8 @@ spec:
       network: network1
       tracer:
         zipkin:
-          address: jaeger.jaeger-infra:9411
-    gateways:
-      istio-ingressgateway:
-        injectionTemplate: gateway
-      istio-egressgateway:
-        injectionTemplate: gateway  
+          address: jaeger.service-mesh:9411
   components:
-    egressGateways:
-      - name: istio-egressgateway
-        enabled: true
     ingressGateways:
       - name: istio-ingressgateway
         enabled: true
@@ -117,7 +109,7 @@ spec:
               - name: tls
                 port: 15443
                 protocol: TCP
-                targetPort: 15443       
+                targetPort: 15443
 EOF
 `
   local LAST_CLUSTER=`kind get clusters | grep cluster | tail -1`
