@@ -9,11 +9,11 @@ IP=$(ip a | grep -v kube | grep -v 127.0.0.1 | grep -v docker | grep -v 'br\-' |
 
 function ::docker(){
   echo "Ready to install docker. Wait a moment ..."
-  sudo yum update -y >dev/null
-  sudo yum install -y yum-utils >dev/null  
-  sudo yum install -y device-mapper-persistent-data >dev/null
-  sudo yum install -y  lvm2 >dev/null	
-  sudo yum install -y yum-utils device-mapper-persistent-data lvm2  >dev/null
+  sudo yum update -y
+  sudo yum install -y yum-utils
+  sudo yum install -y device-mapper-persistent-data
+  sudo yum install -y  lvm2 
+  sudo yum install -y yum-utils device-mapper-persistent-data lvm2
   yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
   sudo yum install -y docker-ce 
   mkdir /etc/docker || true
@@ -300,8 +300,8 @@ echo "bookinfo访问地址: http://${IP}:30205/productpage"
 }
 
 function ::install_nginx(){
-  sudo yum install -y epel-release >dev/null
-  sudo yum install -y nginx >dev/null 
+  sudo yum install -y epel-release
+  sudo yum install -y nginx
   systemctl enable nginx
   systemctl start nginx 
 }
@@ -314,6 +314,7 @@ function ::solarmesh(){
 
 function ::install_k8s(){
  echo "Ready to install k8s. Wait a moment ..." 
+ sudo systemctl restart docker  
  local CLUSTER_CONF=`cat <<EOF
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
