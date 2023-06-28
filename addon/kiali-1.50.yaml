@@ -14,7 +14,6 @@ metadata:
     app.kubernetes.io/version: "v1.50.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: "kiali"
-...
 ---
 # Source: kiali-server/templates/configmap.yaml
 apiVersion: v1
