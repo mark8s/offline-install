@@ -1,0 +1,145 @@
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"solar-controller","version":"v1"},"name":"solar-controller","namespace":"service-mesh"},"spec":{"replicas":2,"selector":{"matchLabels":{"app":"solar-controller"}},"template":{"metadata":{"labels":{"app":"solar-controller"}},"spec":{"affinity":{"podAntiAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"podAffinityTerm":{"labelSelector":{"matchExpressions":[{"key":"app","operator":"In","values":["solar-controller"]}]},"topologyKey":"kubernetes.io/hostname"},"weight":100}]}},"containers":[{"args":["solar-controller","--config=/etc/config/application.yml"],"env":[{"name":"POD_NAME","valueFrom":{"fieldRef":{"fieldPath":"metadata.name"}}},{"name":"POD_NAMESPACE","valueFrom":{"fieldRef":{"fieldPath":"metadata.namespace"}}},{"name":"POD_SERVICE_ACCOUNT","valueFrom":{"fieldRef":{"fieldPath":"spec.serviceAccountName"}}}],"image":"registry.cn-shenzhen.aliyuncs.com/solarmesh/solar-controller:v1.12.1","imagePullPolicy":"Always","livenessProbe":{"httpGet":{"path":"/api/v2.0/healthz","port":8080},"initialDelaySeconds":30,"periodSeconds":20,"timeoutSeconds":30},"name":"solar-controller","readinessProbe":{"httpGet":{"path":"/api/v2.0/healthz","port":8080},"initialDelaySeconds":30,"timeoutSeconds":30},"resources":{"limits":{"cpu":"2","memory":"1Gi"},"requests":{"cpu":"100m","memory":"100Mi"}},"volumeMounts":[{"mountPath":"/etc/cacerts","name":"cacerts","readOnly":true},{"mountPath":"/etc/config","name":"mesher-config","readOnly":true}]}],"serviceAccountName":"solar-controller-service-account","volumes":[{"name":"cacerts","secret":{"defaultMode":420,"optional":true,"secretName":"cacerts"}},{"configMap":{"defaultMode":420,"name":"mesher-config"},"name":"mesher-config"}]}}}}
+  creationTimestamp: "2023-05-19T04:01:23Z"
+  generation: 1
+  labels:
+    app: solar-controller
+    version: v1
+  name: solar-controller
+  namespace: service-mesh
+  resourceVersion: "16103975"
+  uid: 8fcffe35-4015-43df-8586-7eb2deed3e06
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 2
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: solar-controller
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: solar-controller
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - solar-controller
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      containers:
+      - args:
+        - solar-controller
+        - --config=/etc/config/application.yml
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: POD_SERVICE_ACCOUNT
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.serviceAccountName
+        image: registry.cn-shenzhen.aliyuncs.com/solarmesh/solar-controller:v1.12.2
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /api/v2.0/healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 20
+          successThreshold: 1
+          timeoutSeconds: 30
+        name: solar-controller
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /api/v2.0/healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 30
+        resources:
+          limits:
+            cpu: "2"
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/cacerts
+          name: cacerts
+          readOnly: true
+        - mountPath: /etc/config
+          name: mesher-config
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: solar-controller-service-account
+      serviceAccountName: solar-controller-service-account
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: cacerts
+        secret:
+          defaultMode: 420
+          optional: true
+          secretName: cacerts
+      - configMap:
+          defaultMode: 420
+          name: mesher-config
+        name: mesher-config
+status:
+  availableReplicas: 2
+  conditions:
+  - lastTransitionTime: "2023-05-19T04:05:13Z"
+    lastUpdateTime: "2023-05-19T04:05:13Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2023-05-19T04:01:23Z"
+    lastUpdateTime: "2023-05-19T04:05:13Z"
+    message: ReplicaSet "solar-controller-5cb7b49cd5" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 2
+  replicas: 2
+  updatedReplicas: 2
